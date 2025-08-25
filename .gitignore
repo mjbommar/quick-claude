@@ -26,9 +26,9 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Project
-.claude/logs/
-.claude/history.json
+# Project - local installation files
+.claude/
+CLAUDE.md
 *.log
 
 # Test
