@@ -102,6 +102,7 @@ project_type: auto
         debug("Starting download_essential_modules()")
         essential_modules = [
             ("context", "base-instructions"),
+            ("context", "claude-md-management"),
             ("context", "production-mindset"),
             ("context", "project-structure"),
             ("behavior", "test-driven-development"),
@@ -244,6 +245,29 @@ Learn from each task:
 - Recognize patterns
 - Improve approach
 """
+        elif name == "claude-md-management":
+            content = """---
+id: claude-md-management
+name: CLAUDE.md Management
+category: context
+priority: 99
+active: true
+---
+
+# Managing CLAUDE.md
+
+## This file is auto-generated!
+
+To update CLAUDE.md:
+1. Edit modules in .claude/modules/
+2. Run: python cm.py compile
+
+Commands:
+- python cm.py list
+- python cm.py activate <module>
+- python cm.py deactivate <module>
+- python cm.py compile
+"""
         elif name == "todo-management":
             content = """---
 id: todo-management
@@ -348,6 +372,10 @@ Module content here.
             "# CLAUDE.md - Project Context",
             f"Generated: {datetime.now().isoformat()}",
             f"Modules: {len(all_modules)}",
+            "",
+            "## 📝 This file is auto-generated from .claude/modules/",
+            "To update: Edit modules in `.claude/modules/` then run `python cm.py compile`",
+            "Commands: `python cm.py list` | `python cm.py activate <module>` | `python cm.py deactivate <module>`",
             "",
         ]
         

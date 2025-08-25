@@ -176,6 +176,7 @@ setup_claude_modules() {
                 # Download essential modules manually
                 local modules=(
                     "context/base-instructions.md"
+                    "context/claude-md-management.md"
                     "context/production-mindset.md"
                     "context/project-structure.md"
                     "behavior/test-driven-development.md"
@@ -252,6 +253,7 @@ activate_default_modules() {
     if [ -f "cm.py" ]; then
         # Always activate critical modules
         uv run python cm.py activate base-instructions 2>/dev/null || true
+        uv run python cm.py activate claude-md-management 2>/dev/null || true
         uv run python cm.py activate production-mindset 2>/dev/null || true
         uv run python cm.py activate test-driven-development 2>/dev/null || true
         uv run python cm.py activate todo-management 2>/dev/null || true
