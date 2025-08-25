@@ -44,7 +44,7 @@ class SimpleModuleManager:
             "project_type": "auto"
         }
     
-    def init(self):
+    def init(self, auto_compile=True):
         """Initialize Claude module system"""
         print("🚀 Initializing Claude Module System...")
         
@@ -73,10 +73,16 @@ project_type: auto
         self.download_essential_modules()
         
         print("✅ Claude module system initialized!")
-        print("\nNext steps:")
-        print("  1. Run 'python cm.py compile' to generate CLAUDE.md")
-        print("  2. Run 'python cm.py list' to see available modules")
-        print("  3. Add custom modules to .claude/modules/")
+        
+        # Auto-compile if requested
+        if auto_compile:
+            print("\n📦 Compiling initial CLAUDE.md...")
+            self.compile()
+        else:
+            print("\nNext steps:")
+            print("  1. Run 'python cm.py compile' to generate CLAUDE.md")
+            print("  2. Run 'python cm.py list' to see available modules")
+            print("  3. Add custom modules to .claude/modules/")
     
     def download_essential_modules(self):
         """Download essential modules from repository"""

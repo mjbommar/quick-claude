@@ -141,43 +141,46 @@ download_cm_py() {
 setup_claude_modules() {
     print_step "Setting up Claude Module System..."
     
-    # Create directory structure
-    mkdir -p .claude/modules/{task,tech,behavior,context,memory}
-    mkdir -p .claude/{config,logs}
+    # Create basic directory structure
     mkdir -p {docs,notes,todo}
     
-    # Download essential modules
-    local modules=(
-        "context/base-instructions.md"
-        "context/project-structure.md"
-        "tech/python-modern.md"
-        "tech/node-typescript.md"
-        "behavior/flow-state.md"
-        "task/todo-management.md"
-    )
-    
-    for module in "${modules[@]}"; do
-        local module_url="$REPO_BASE/modules/$module"
-        local module_path=".claude/modules/$module"
-        
-        if curl -sSL "$module_url" -o "$module_path" 2>/dev/null; then
-            echo "  ✓ Downloaded $module"
+    # Initialize using cm.py with interceptor bypass
+    if [ -f "cm.py" ]; then
+        export CLAUDE_INTERCEPTOR_BYPASS=1
+        if python cm.py init 2>/dev/null; then
+            print_success "Module system initialized with CLAUDE.md"
         else
-            echo "  ⚠ Could not download $module (will create default)"
+            # Fallback: manual setup if cm.py init fails
+            mkdir -p .claude/modules/{task,tech,behavior,context,memory}
+            mkdir -p .claude/{config,logs}
+            
+            # Download essential modules
+            local modules=(
+                "context/base-instructions.md"
+                "context/project-structure.md"
+                "tech/python-modern.md"
+                "tech/node-typescript.md"
+                "behavior/flow-state.md"
+                "task/todo-management.md"
+            )
+            
+            for module in "${modules[@]}"; do
+                local module_url="$REPO_BASE/modules/$module"
+                local module_path=".claude/modules/$module"
+                
+                if curl -sSL "$module_url" -o "$module_path" 2>/dev/null; then
+                    echo "  ✓ Downloaded $module"
+                else
+                    echo "  ⚠ Could not download $module"
+                fi
+            done
+            
+            print_warning "Manual setup completed - run 'python cm.py compile' to generate CLAUDE.md"
         fi
-    done
-    
-    # Create config if not exists
-    if [ ! -f ".claude/config.yaml" ]; then
-        cat > .claude/config.yaml << 'EOF'
-# Claude Module System Configuration
-auto_compile: true
-max_size: 5000
-project_type: auto
-EOF
+        unset CLAUDE_INTERCEPTOR_BYPASS
+    else
+        print_error "cm.py not found - cannot initialize modules"
     fi
-    
-    print_success "Module system initialized"
 }
 
 create_project_files() {
@@ -222,8 +225,11 @@ activate_default_modules() {
     local project_type=$1
     print_step "Activating default modules for $project_type..."
     
-    # Use Python to run cm.py
+    # Use Python to run cm.py - bypass interceptors during setup
     if [ -f "cm.py" ]; then
+        # Bypass interceptors for initial setup
+        export CLAUDE_INTERCEPTOR_BYPASS=1
+        
         # Always activate base modules
         python cm.py activate base-instructions 2>/dev/null || true
         python cm.py activate project-structure 2>/dev/null || true
@@ -251,6 +257,9 @@ activate_default_modules() {
         else
             print_warning "Could not compile CLAUDE.md (run 'python cm.py compile' manually)"
         fi
+        
+        # Unset bypass for normal operation
+        unset CLAUDE_INTERCEPTOR_BYPASS
     fi
 }
 
@@ -330,9 +339,14 @@ main() {
     install_claude_interceptors
     install_pyenvsearch
     download_cm_py
+    
+    # Initialize and activate modules with interceptor bypass
+    export CLAUDE_INTERCEPTOR_BYPASS=1
     setup_claude_modules
     create_project_files "$PROJECT_TYPE"
     activate_default_modules "$PROJECT_TYPE"
+    unset CLAUDE_INTERCEPTOR_BYPASS
+    
     install_optional_tools
     
     # Show completion message
