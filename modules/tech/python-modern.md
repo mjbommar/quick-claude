@@ -13,6 +13,13 @@ triggers:
 
 # Modern Python Development
 
+## 🚨 ABSOLUTE RULES - USE MODERN TOOLS ONLY
+
+1. **USE `ty` for type checking - NEVER mypy or pyright**
+2. **USE `ruff` for formatting and linting - NEVER black or pylint**
+3. **NEVER install development tools as dependencies**
+4. **ALWAYS use uvx for ephemeral tool execution**
+
 ## ⚠️ CRITICAL: Command Rules
 
 ### The Golden Rule: uvx for tools, uv add for dependencies
@@ -20,9 +27,10 @@ triggers:
 | Task | ❌ WRONG | ✅ RIGHT | Why |
 |------|----------|----------|-----|
 | Install library | `pip install requests` | `uv add requests` | It's a dependency |
-| Install dev tool | `uv add --group dev mypy` | `uvx mypy` | It's a tool |
-| Type check | `python -m mypy` | `uvx mypy main.py` | Tool execution |
-| Format code | `pip install black && black .` | `uvx black .` | Tool execution |
+| Install dev tool | `uv add --group dev ruff` | `uvx ruff` | It's a tool |
+| Type check | `uvx mypy` or `uvx pyright` | `uvx ty check` | Use ty, not mypy! |
+| Format code | `uvx black .` | `uvx ruff format .` | Use ruff, not black! |
+| Lint code | `uvx pylint` | `uvx ruff check .` | Use ruff, not pylint! |
 | Run tests | `python -m pytest` | `uvx pytest` | Tool execution |
 
 ## Python Version Selection
@@ -60,28 +68,47 @@ uvx pytest         # ✅ No installation needed
 
 **NEVER DO THIS:**
 ```bash
-uv add --group dev mypy  # ❌ Don't install tools as dependencies
-pip install black        # ❌ Don't use pip at all
+uv add --group dev mypy  # ❌ NEVER use mypy - use ty instead
+uv add --group dev black # ❌ NEVER use black - use ruff format instead
+pip install anything     # ❌ NEVER use pip at all
 ```
 
 ## Code Quality
 
-**IMPORTANT: Use uvx for ALL Python tools - NEVER install them as dev dependencies**
+**USE MODERN TOOLS ONLY:**
+- **Type checking**: `ty` (NOT mypy, NOT pyright)
+- **Formatting**: `ruff format` (NOT black)
+- **Linting**: `ruff check` (NOT pylint, NOT flake8)
 
-Always validate code with:
-- Format: `uvx ruff format <files>`
-- Lint: `uvx ruff check --fix <files>`
-- Type check: `uvx mypy <files>`
+### Commands to use:
 
-**NEVER do this:**
-- ❌ `uv add --group dev mypy` 
-- ❌ `uv add --dev ruff`
-- ❌ `pip install black`
+```bash
+# Type checking with ty
+uvx ty check                    # Check all files
+uvx ty check src/               # Check specific directory
 
-**ALWAYS do this:**
-- ✅ `uvx mypy main.py` - Runs mypy without installing
-- ✅ `uvx ruff check .` - Runs ruff without installing
-- ✅ `uvx black .` - Runs black without installing
+# Formatting with ruff
+uvx ruff format .               # Format all Python files
+uvx ruff format src/            # Format specific directory
+
+# Linting with ruff
+uvx ruff check .                # Lint all files
+uvx ruff check --fix .          # Auto-fix issues
+```
+
+### NEVER use these tools:
+- ❌ **mypy** - Use `ty` instead
+- ❌ **pyright** - Use `ty` instead
+- ❌ **black** - Use `ruff format` instead
+- ❌ **pylint** - Use `ruff check` instead
+- ❌ **flake8** - Use `ruff check` instead
+- ❌ **isort** - Use `ruff` (it handles imports too)
+
+### NEVER do this:
+- ❌ Add `[tool.mypy]` to pyproject.toml
+- ❌ Add `[tool.black]` to pyproject.toml
+- ❌ Install any linting/formatting tools as dependencies
+- ❌ Try to install `types-*` packages
 
 ## Project Setup
 
