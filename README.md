@@ -18,7 +18,7 @@ After running the installer, your project will have:
 
 ```bash
 # One-line install
-curl -sSL https://raw.githubusercontent.com/mjbommar/quick-claude/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/mjbommar/quick-claude/master/install.sh | bash
 
 # Or clone and run locally
 git clone https://github.com/mjbommar/quick-claude

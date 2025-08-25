@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 BOLD='\033[1m'
 
 # Configuration
-REPO_BASE="https://raw.githubusercontent.com/mjbommar/quick-claude/main"
+REPO_BASE="https://raw.githubusercontent.com/mjbommar/quick-claude/master"
 INTERCEPTORS_INSTALL="https://raw.githubusercontent.com/mjbommar/claude-interceptors/refs/heads/master/install.sh"
 
 # Helper functions
