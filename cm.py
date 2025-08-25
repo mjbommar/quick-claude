@@ -91,13 +91,24 @@ project_type: auto
             ("context", "project-structure"),
             ("behavior", "flow-state"),
             ("task", "todo-management"),
+            ("tech", "python-modern"),
         ]
         
         for category, module_name in essential_modules:
             module_path = MODULE_DIR / category / f"{module_name}.md"
             if not module_path.exists():
-                # In real implementation, download from repo
-                self.create_default_module(module_path, module_name, category)
+                # Try to download from repo, fallback to creating default
+                try:
+                    import urllib.request
+                    url = f"{MODULES_REPO}/{category}/{module_name}.md"
+                    response = urllib.request.urlopen(url, timeout=5)
+                    content = response.read().decode('utf-8')
+                    module_path.parent.mkdir(parents=True, exist_ok=True)
+                    module_path.write_text(content)
+                    print(f"  ✓ Downloaded {category}/{module_name}")
+                except:
+                    # Fallback to creating default module
+                    self.create_default_module(module_path, module_name, category)
     
     def create_default_module(self, path: Path, name: str, category: str):
         """Create a default module file"""
@@ -152,6 +163,27 @@ active: false
 
 When activated, prioritize uninterrupted progress.
 Make reasonable assumptions and batch operations.
+"""
+        elif name == "python-modern":
+            content = """---
+id: python-modern
+name: Modern Python Development
+category: tech
+priority: 9
+active: false
+---
+
+# Modern Python Development
+
+## Package Management
+- Use `uv add <package>` for dependencies
+- Use `uvx <tool>` for development tools
+- Never use pip or pip3
+
+## Tools
+- Type check: `uvx mypy <files>`
+- Format: `uvx ruff format <files>`
+- Lint: `uvx ruff check --fix <files>`
 """
         else:
             content = f"""---
