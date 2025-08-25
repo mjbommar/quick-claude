@@ -41,6 +41,11 @@ You have access to:
 - This is faster and cleaner than installing dev dependencies
 - Examples: `uvx mypy`, `uvx ruff`, `uvx pytest`
 
+**Python Version**: Always check and use the latest stable Python:
+- Check available: `uv python list`
+- Pin version: `uv python pin 3.13`
+- Verify: `cat .python-version`
+
 ## Communication
 
 - Use clear, technical language

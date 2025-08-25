@@ -25,6 +25,25 @@ triggers:
 | Format code | `pip install black && black .` | `uvx black .` | Tool execution |
 | Run tests | `python -m pytest` | `uvx pytest` | Tool execution |
 
+## Python Version Selection
+
+**IMPORTANT**: Check available Python versions before starting:
+```bash
+uv python list          # See all available Python versions
+uv python pin 3.13      # Pin to Python 3.13 (recommended - latest stable)
+```
+
+If project uses wrong Python version:
+```bash
+# Check current version
+cat .python-version
+
+# Update to latest
+uv python pin 3.13
+rm -rf .venv
+uv sync
+```
+
 ## Package Management
 
 **FOR DEPENDENCIES** (packages your code imports):
@@ -66,10 +85,18 @@ Always validate code with:
 
 ## Project Setup
 
+Initialize new Python project:
+```bash
+uv init                 # Create new project
+uv python pin 3.13      # Use latest Python (check with: uv python list)
+uv venv                 # Create virtual environment
+```
+
 Standard Python project structure:
 ```
 project/
 ├── pyproject.toml
+├── .python-version     # Pins Python version (e.g., "3.13")
 ├── src/
 │   └── project_name/
 │       ├── __init__.py
