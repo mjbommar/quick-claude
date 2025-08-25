@@ -146,33 +146,26 @@ setup_claude_modules() {
     mkdir -p .claude/modules/{task,tech,behavior,context,memory}
     mkdir -p .claude/{config,logs}
     
-    # Initialize using cm.py with interceptor bypass
+    # Initialize using cm.py - use uv run to bypass interceptors
     if [ -f "cm.py" ]; then
-        export CLAUDE_INTERCEPTOR_BYPASS=1
-        
         # Debug mode check
         if [ -n "$QUICK_CLAUDE_DEBUG" ]; then
-            echo "  [DEBUG] Running: python cm.py init"
-            echo "  [DEBUG] Python: $(which python)"
-            echo "  [DEBUG] Python version: $(python --version 2>&1)"
+            echo "  [DEBUG] Running: uv run python cm.py init"
             echo "  [DEBUG] Current dir: $(pwd)"
             echo "  [DEBUG] cm.py exists: $(ls -la cm.py 2>&1)"
         fi
         
-        # First, test if Python can even run cm.py
-        if ! python -c "import sys; sys.exit(0)" 2>/dev/null; then
-            print_error "Python is not working properly"
-            print_warning "Falling back to manual setup..."
-        elif ! python cm.py --help >/dev/null 2>&1; then
+        # Use uv run python which bypasses interceptors and handles venv
+        if ! uv run python cm.py --help >/dev/null 2>&1; then
             print_error "cm.py has syntax errors or import issues"
             if [ -n "$QUICK_CLAUDE_DEBUG" ]; then
                 echo "  [DEBUG] Error output:"
-                python cm.py --help 2>&1 | sed 's/^/    /'
+                uv run python cm.py --help 2>&1 | sed 's/^/    /'
             fi
             print_warning "Falling back to manual setup..."
         else
             # Run init directly to see real-time output
-            python cm.py init || true
+            uv run python cm.py init || true
             
             # Check if CLAUDE.md was created
             if [ -f "CLAUDE.md" ]; then
@@ -204,7 +197,6 @@ setup_claude_modules() {
                 print_success "Modules downloaded manually"
             fi
         fi
-        unset CLAUDE_INTERCEPTOR_BYPASS
     else
         print_error "cm.py not found - cannot initialize modules"
     fi
@@ -252,41 +244,35 @@ activate_default_modules() {
     local project_type=$1
     print_step "Activating default modules for $project_type..."
     
-    # Use Python to run cm.py - bypass interceptors during setup
+    # Use uv run python to bypass interceptors
     if [ -f "cm.py" ]; then
-        # Bypass interceptors for initial setup
-        export CLAUDE_INTERCEPTOR_BYPASS=1
-        
         # Always activate base modules
-        python cm.py activate base-instructions 2>/dev/null || true
-        python cm.py activate project-structure 2>/dev/null || true
+        uv run python cm.py activate base-instructions 2>/dev/null || true
+        uv run python cm.py activate project-structure 2>/dev/null || true
         
         # Activate project-specific modules
         case $project_type in
             python)
-                python cm.py activate python-modern 2>/dev/null || true
+                uv run python cm.py activate python-modern 2>/dev/null || true
                 print_success "Python modules activated"
                 ;;
             node)
-                python cm.py activate node-typescript 2>/dev/null || true
+                uv run python cm.py activate node-typescript 2>/dev/null || true
                 print_success "Node.js modules activated"
                 ;;
             *)
                 # For generic projects, activate Python module since uv is installed
-                python cm.py activate python-modern 2>/dev/null || true
+                uv run python cm.py activate python-modern 2>/dev/null || true
                 print_success "Base modules + Python module activated (uv available)"
                 ;;
         esac
         
         # Compile CLAUDE.md
-        if python cm.py compile 2>/dev/null; then
+        if uv run python cm.py compile 2>/dev/null; then
             print_success "CLAUDE.md compiled"
         else
-            print_warning "Could not compile CLAUDE.md (run 'python cm.py compile' manually)"
+            print_warning "Could not compile CLAUDE.md (run 'uv run python cm.py compile' manually)"
         fi
-        
-        # Unset bypass for normal operation
-        unset CLAUDE_INTERCEPTOR_BYPASS
     fi
 }
 
@@ -367,12 +353,10 @@ main() {
     install_pyenvsearch
     download_cm_py
     
-    # Initialize and activate modules with interceptor bypass
-    export CLAUDE_INTERCEPTOR_BYPASS=1
+    # Initialize and activate modules (uv run bypasses interceptors)
     setup_claude_modules
     create_project_files "$PROJECT_TYPE"
     activate_default_modules "$PROJECT_TYPE"
-    unset CLAUDE_INTERCEPTOR_BYPASS
     
     install_optional_tools
     
