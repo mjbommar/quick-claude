@@ -22,6 +22,10 @@ triggers:
 - Run scripts: `uv run python script.py`
 - Run tools: `uvx <tool>`
 
+**NEVER use pip, pip3, or python -m pip**. Always use `uv add` instead:
+- ❌ WRONG: `pip install httpx`
+- ✅ RIGHT: `uv add httpx`
+
 ## Code Quality
 
 Always validate code with:

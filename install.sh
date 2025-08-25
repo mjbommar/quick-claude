@@ -92,9 +92,17 @@ install_claude_interceptors() {
     if curl -sSL "$INTERCEPTORS_INSTALL" | bash; then
         print_success "Claude Interceptors installed"
         
-        # Try to enable interceptors
-        if command -v claude-interceptor-enable &> /dev/null; then
-            claude-interceptor-enable 2>/dev/null || true
+        # Source bashrc to get the new commands
+        if [ -f "$HOME/.bashrc" ]; then
+            source "$HOME/.bashrc" 2>/dev/null || true
+        fi
+        
+        # Try to enable interceptors for current session
+        if [ -f "$HOME/.local/share/claude-interceptors/enable.sh" ]; then
+            source "$HOME/.local/share/claude-interceptors/enable.sh" 2>/dev/null || true
+            print_success "Claude Interceptors enabled for current session"
+        elif command -v claude-interceptor-enable &> /dev/null; then
+            eval "$(claude-interceptor-enable)" 2>/dev/null || true
             print_success "Claude Interceptors enabled"
         fi
     else
@@ -290,9 +298,19 @@ print_next_steps() {
     if [ "$project_type" == "python" ]; then
         echo -e "\n${YELLOW}💡 Python project detected!${NC}"
         echo -e "  Claude will use ${CYAN}uv${NC} for package management"
+        echo -e "  Try: ${CYAN}uv add httpx${NC} instead of ${DIM}pip install httpx${NC}"
     elif [ "$project_type" == "node" ]; then
         echo -e "\n${YELLOW}💡 Node.js project detected!${NC}"
         echo -e "  TypeScript module activated"
+    fi
+    
+    # Check if interceptors are active
+    if [ -n "$CLAUDE_INTERCEPTORS_ACTIVE" ]; then
+        echo -e "\n${GREEN}✓ Command interceptors active${NC}"
+        echo -e "  Old commands will suggest modern alternatives"
+    else
+        echo -e "\n${YELLOW}⚠ Enable interceptors for this session:${NC}"
+        echo -e "  ${CYAN}source ~/.bashrc && claude-interceptor-enable${NC}"
     fi
 }
 
