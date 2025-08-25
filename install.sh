@@ -147,13 +147,11 @@ setup_claude_modules() {
     # Initialize using cm.py with interceptor bypass
     if [ -f "cm.py" ]; then
         export CLAUDE_INTERCEPTOR_BYPASS=1
-        # Run init with output
-        output=$(python cm.py init 2>&1)
-        if [ $? -eq 0 ]; then
-            echo "$output" | sed 's/^/  /'
+        # Run init directly to see real-time output
+        if python cm.py init; then
             print_success "Module system initialized with CLAUDE.md"
         else
-            echo "$output" | sed 's/^/  /'
+            print_warning "cm.py init failed, trying manual setup..."
             # Fallback: manual setup if cm.py init fails
             mkdir -p .claude/modules/{task,tech,behavior,context,memory}
             mkdir -p .claude/{config,logs}

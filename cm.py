@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Set, Any
 MODULE_DIR = Path(".claude/modules")
 CLAUDE_MD = Path("CLAUDE.md")
 CONFIG_FILE = Path(".claude/config.yaml")
-MODULES_REPO = "https://raw.githubusercontent.com/mjbommar/quick-claude/main/modules"
+MODULES_REPO = "https://raw.githubusercontent.com/mjbommar/quick-claude/master/modules"
 
 class SimpleModuleManager:
     """Minimal module manager that works with stdlib only"""
@@ -100,14 +100,19 @@ project_type: auto
                 # Try to download from repo, fallback to creating default
                 try:
                     import urllib.request
+                    import urllib.error
                     url = f"{MODULES_REPO}/{category}/{module_name}.md"
-                    response = urllib.request.urlopen(url, timeout=5)
+                    response = urllib.request.urlopen(url, timeout=3)
                     content = response.read().decode('utf-8')
                     module_path.parent.mkdir(parents=True, exist_ok=True)
                     module_path.write_text(content)
                     print(f"  ✓ Downloaded {category}/{module_name}")
-                except:
+                except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
                     # Fallback to creating default module
+                    print(f"  ⚠ Could not download {category}/{module_name} (using default)")
+                    self.create_default_module(module_path, module_name, category)
+                except Exception as e:
+                    print(f"  ⚠ Error with {category}/{module_name}: {e}")
                     self.create_default_module(module_path, module_name, category)
     
     def create_default_module(self, path: Path, name: str, category: str):
