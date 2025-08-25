@@ -141,43 +141,68 @@ download_cm_py() {
 setup_claude_modules() {
     print_step "Setting up Claude Module System..."
     
-    # Create basic directory structure
+    # Create basic directory structure  
     mkdir -p {docs,notes,todo}
+    mkdir -p .claude/modules/{task,tech,behavior,context,memory}
+    mkdir -p .claude/{config,logs}
     
     # Initialize using cm.py with interceptor bypass
     if [ -f "cm.py" ]; then
         export CLAUDE_INTERCEPTOR_BYPASS=1
-        # Run init directly to see real-time output
-        if python cm.py init; then
-            print_success "Module system initialized with CLAUDE.md"
+        
+        # Debug mode check
+        if [ -n "$QUICK_CLAUDE_DEBUG" ]; then
+            echo "  [DEBUG] Running: python cm.py init"
+            echo "  [DEBUG] Python: $(which python)"
+            echo "  [DEBUG] Python version: $(python --version 2>&1)"
+            echo "  [DEBUG] Current dir: $(pwd)"
+            echo "  [DEBUG] cm.py exists: $(ls -la cm.py 2>&1)"
+        fi
+        
+        # First, test if Python can even run cm.py
+        if ! python -c "import sys; sys.exit(0)" 2>/dev/null; then
+            print_error "Python is not working properly"
+            print_warning "Falling back to manual setup..."
+        elif ! python cm.py --help >/dev/null 2>&1; then
+            print_error "cm.py has syntax errors or import issues"
+            if [ -n "$QUICK_CLAUDE_DEBUG" ]; then
+                echo "  [DEBUG] Error output:"
+                python cm.py --help 2>&1 | sed 's/^/    /'
+            fi
+            print_warning "Falling back to manual setup..."
         else
-            print_warning "cm.py init failed, trying manual setup..."
-            # Fallback: manual setup if cm.py init fails
-            mkdir -p .claude/modules/{task,tech,behavior,context,memory}
-            mkdir -p .claude/{config,logs}
+            # Run init directly to see real-time output
+            python cm.py init || true
             
-            # Download essential modules
-            local modules=(
-                "context/base-instructions.md"
-                "context/project-structure.md"
-                "tech/python-modern.md"
-                "tech/node-typescript.md"
-                "behavior/flow-state.md"
-                "task/todo-management.md"
-            )
-            
-            for module in "${modules[@]}"; do
-                local module_url="$REPO_BASE/modules/$module"
-                local module_path=".claude/modules/$module"
+            # Check if CLAUDE.md was created
+            if [ -f "CLAUDE.md" ]; then
+                print_success "Module system initialized with CLAUDE.md"
+            else
+                print_warning "CLAUDE.md not created, performing manual setup..."
                 
-                if curl -sSL "$module_url" -o "$module_path" 2>/dev/null; then
-                    echo "  ✓ Downloaded $module"
-                else
-                    echo "  ⚠ Could not download $module"
-                fi
-            done
-            
-            print_warning "Manual setup completed - run 'python cm.py compile' to generate CLAUDE.md"
+                # Download essential modules manually
+                local modules=(
+                    "context/base-instructions.md"
+                    "context/project-structure.md"
+                    "tech/python-modern.md"
+                    "tech/node-typescript.md"
+                    "behavior/flow-state.md"
+                    "task/todo-management.md"
+                )
+                
+                for module in "${modules[@]}"; do
+                    local module_url="$REPO_BASE/modules/$module"
+                    local module_path=".claude/modules/$module"
+                    
+                    if curl -sSL "$module_url" -o "$module_path" 2>/dev/null; then
+                        echo "  ✓ Downloaded $module"
+                    else
+                        echo "  ⚠ Could not download $module"
+                    fi
+                done
+                
+                print_success "Modules downloaded manually"
+            fi
         fi
         unset CLAUDE_INTERCEPTOR_BYPASS
     else

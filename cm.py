@@ -14,6 +14,14 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Any
 
+# Debug mode
+DEBUG = os.environ.get('QUICK_CLAUDE_DEBUG', '').lower() in ('1', 'true', 'yes')
+
+def debug(msg: str):
+    """Print debug message if DEBUG is enabled"""
+    if DEBUG:
+        print(f"[DEBUG] {msg}", file=sys.stderr)
+
 # Constants
 MODULE_DIR = Path(".claude/modules")
 CLAUDE_MD = Path("CLAUDE.md")
@@ -24,8 +32,10 @@ class SimpleModuleManager:
     """Minimal module manager that works with stdlib only"""
     
     def __init__(self):
+        debug("SimpleModuleManager.__init__() called")
         self.modules = {}
         self.config = self.load_config()
+        debug(f"Config loaded: {self.config}")
     
     def load_config(self) -> dict:
         """Load or create default config"""
@@ -46,6 +56,7 @@ class SimpleModuleManager:
     
     def init(self, auto_compile=True):
         """Initialize Claude module system"""
+        debug("Starting init()")
         print("🚀 Initializing Claude Module System...")
         
         # Create directory structure
@@ -57,8 +68,10 @@ class SimpleModuleManager:
             ".claude/modules/memory",
         ]
         
+        debug(f"Creating {len(dirs)} directories")
         for dir_path in dirs:
             Path(dir_path).mkdir(parents=True, exist_ok=True)
+            debug(f"Created {dir_path}")
         
         # Create default config
         if not CONFIG_FILE.exists():
@@ -86,6 +99,7 @@ project_type: auto
     
     def download_essential_modules(self):
         """Download essential modules from repository"""
+        debug("Starting download_essential_modules()")
         essential_modules = [
             ("context", "base-instructions"),
             ("context", "project-structure"),
@@ -96,12 +110,14 @@ project_type: auto
         
         for category, module_name in essential_modules:
             module_path = MODULE_DIR / category / f"{module_name}.md"
+            debug(f"Checking {module_path}")
             if not module_path.exists():
                 # Try to download from repo, fallback to creating default
                 try:
                     import urllib.request
                     import urllib.error
                     url = f"{MODULES_REPO}/{category}/{module_name}.md"
+                    debug(f"Downloading from {url}")
                     response = urllib.request.urlopen(url, timeout=3)
                     content = response.read().decode('utf-8')
                     module_path.parent.mkdir(parents=True, exist_ok=True)
@@ -109,11 +125,15 @@ project_type: auto
                     print(f"  ✓ Downloaded {category}/{module_name}")
                 except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
                     # Fallback to creating default module
+                    debug(f"Download failed for {category}/{module_name}: {e}")
                     print(f"  ⚠ Could not download {category}/{module_name} (using default)")
                     self.create_default_module(module_path, module_name, category)
                 except Exception as e:
+                    debug(f"Unexpected error for {category}/{module_name}: {e}")
                     print(f"  ⚠ Error with {category}/{module_name}: {e}")
                     self.create_default_module(module_path, module_name, category)
+            else:
+                debug(f"Module already exists: {module_path}")
     
     def create_default_module(self, path: Path, name: str, category: str):
         """Create a default module file"""
@@ -359,10 +379,17 @@ Module content here.
 
 def main():
     """Main entry point with simple CLI"""
-    manager = SimpleModuleManager()
+    debug(f"main() called with args: {sys.argv}")
+    try:
+        manager = SimpleModuleManager()
+    except Exception as e:
+        debug(f"Failed to create SimpleModuleManager: {e}")
+        print(f"Error initializing module manager: {e}", file=sys.stderr)
+        sys.exit(1)
     
     # Simple argument parsing
     args = sys.argv[1:]
+    debug(f"Parsed args: {args}")
     
     if not args or args[0] in ("-h", "--help", "help"):
         print("""
@@ -394,6 +421,7 @@ For the full-featured version with rich UI, install dependencies:
         print("Run 'python cm.py help' for usage")
 
 if __name__ == "__main__":
+    debug("Script started")
     # Try to use the enhanced version if available
     try:
         import click
@@ -403,5 +431,13 @@ if __name__ == "__main__":
         print("To use full version: uv run cm.py <command>")
         main()
     except ImportError:
+        debug("Using simple version (no click/rich)")
         # Use simple version
         main()
+    except Exception as e:
+        debug(f"Fatal error: {e}")
+        print(f"Fatal error: {e}", file=sys.stderr)
+        import traceback
+        if DEBUG:
+            traceback.print_exc()
+        sys.exit(1)
