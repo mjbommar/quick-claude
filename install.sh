@@ -239,7 +239,9 @@ activate_default_modules() {
                 print_success "Node.js modules activated"
                 ;;
             *)
-                print_success "Base modules activated"
+                # For generic projects, activate Python module since uv is installed
+                python cm.py activate python-modern 2>/dev/null || true
+                print_success "Base modules + Python module activated (uv available)"
                 ;;
         esac
         

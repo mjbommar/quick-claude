@@ -13,25 +13,56 @@ triggers:
 
 # Modern Python Development
 
+## ⚠️ CRITICAL: Command Rules
+
+### The Golden Rule: uvx for tools, uv add for dependencies
+
+| Task | ❌ WRONG | ✅ RIGHT | Why |
+|------|----------|----------|-----|
+| Install library | `pip install requests` | `uv add requests` | It's a dependency |
+| Install dev tool | `uv add --group dev mypy` | `uvx mypy` | It's a tool |
+| Type check | `python -m mypy` | `uvx mypy main.py` | Tool execution |
+| Format code | `pip install black && black .` | `uvx black .` | Tool execution |
+| Run tests | `python -m pytest` | `uvx pytest` | Tool execution |
+
 ## Package Management
 
-**ALWAYS** use `uv` for Python package management:
-- Create venv: `uv venv`
-- Add dependencies: `uv add <package>`
-- Add dev dependencies: `uv add --group dev <package>`
-- Run scripts: `uv run python script.py`
-- Run tools: `uvx <tool>`
+**FOR DEPENDENCIES** (packages your code imports):
+```bash
+uv add requests pandas fastapi  # ✅ These go in pyproject.toml
+```
 
-**NEVER use pip, pip3, or python -m pip**. Always use `uv add` instead:
-- ❌ WRONG: `pip install httpx`
-- ✅ RIGHT: `uv add httpx`
+**FOR TOOLS** (linters, formatters, type checkers):
+```bash
+uvx mypy main.py   # ✅ Runs without installing
+uvx ruff check .   # ✅ Ephemeral execution
+uvx pytest         # ✅ No installation needed
+```
+
+**NEVER DO THIS:**
+```bash
+uv add --group dev mypy  # ❌ Don't install tools as dependencies
+pip install black        # ❌ Don't use pip at all
+```
 
 ## Code Quality
 
+**IMPORTANT: Use uvx for ALL Python tools - NEVER install them as dev dependencies**
+
 Always validate code with:
-- Format: `uvx ruff format`
-- Lint: `uvx ruff check --fix`
-- Type check: `uvx mypy`
+- Format: `uvx ruff format <files>`
+- Lint: `uvx ruff check --fix <files>`
+- Type check: `uvx mypy <files>`
+
+**NEVER do this:**
+- ❌ `uv add --group dev mypy` 
+- ❌ `uv add --dev ruff`
+- ❌ `pip install black`
+
+**ALWAYS do this:**
+- ✅ `uvx mypy main.py` - Runs mypy without installing
+- ✅ `uvx ruff check .` - Runs ruff without installing
+- ✅ `uvx black .` - Runs black without installing
 
 ## Project Setup
 

@@ -34,6 +34,13 @@ You have access to:
 - Web search and fetch capabilities
 - Project-wide search tools (grep, glob)
 
+## Tool Usage
+
+**CRITICAL**: Use `uvx` for ephemeral tool execution:
+- `uvx <tool>` runs tools WITHOUT installing them
+- This is faster and cleaner than installing dev dependencies
+- Examples: `uvx mypy`, `uvx ruff`, `uvx pytest`
+
 ## Communication
 
 - Use clear, technical language

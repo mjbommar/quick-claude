@@ -34,3 +34,7 @@ Thumbs.db
 # Test
 test-install.sh
 /test-*/
+
+# Reference files (not part of the project)
+reference/
+templates/
