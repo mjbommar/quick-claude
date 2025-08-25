@@ -15,10 +15,11 @@ triggers:
 
 ## 🚨 ABSOLUTE RULES - USE MODERN TOOLS ONLY
 
-1. **USE `ty` for type checking - NEVER mypy or pyright**
-2. **USE `ruff` for formatting and linting - NEVER black or pylint**
-3. **NEVER install development tools as dependencies**
-4. **ALWAYS use uvx for ephemeral tool execution**
+1. **USE `pyenvsearch` for package exploration - Essential for understanding code**
+2. **USE `ty` for type checking - NEVER mypy or pyright**
+3. **USE `ruff` for formatting and linting - NEVER black or pylint**
+4. **NEVER install development tools as dependencies**
+5. **ALWAYS use uvx for ephemeral tool execution**
 
 ## ⚠️ CRITICAL: Command Rules
 
@@ -26,6 +27,9 @@ triggers:
 
 | Task | ❌ WRONG | ✅ RIGHT | Why |
 |------|----------|----------|-----|
+| Explore package | `dir(package)` or browsing GitHub | `uvx pyenvsearch toc package` | pyenvsearch gives structured view |
+| Find class/method | Manual search or grep | `uvx pyenvsearch class ClassName` | Semantic search is faster |
+| Understand package | Read docs only | `uvx pyenvsearch summarize package` | AI-powered insights |
 | Install library | `pip install requests` | `uv add requests` | It's a dependency |
 | Install dev tool | `uv add --group dev ruff` | `uvx ruff` | It's a tool |
 | Type check | `uvx mypy` or `uvx pyright` | `uvx ty check` | Use ty, not mypy! |
@@ -52,6 +56,37 @@ rm -rf .venv
 uv sync
 ```
 
+## Package Discovery & Exploration
+
+### 🔍 Use pyenvsearch - Essential Tool for Package Navigation
+
+**pyenvsearch** is a powerful Python library navigation tool that helps you understand and explore packages:
+
+```bash
+# Quick exploration of any package
+uvx pyenvsearch find httpx          # Find where package is installed
+uvx pyenvsearch toc fastapi         # Generate table of contents
+uvx pyenvsearch summarize requests  # Get AI-powered overview
+uvx pyenvsearch list-classes pandas # List all classes in package
+
+# Search for specific functionality
+uvx pyenvsearch search "async def" --package httpx
+uvx pyenvsearch class HttpClient
+uvx pyenvsearch method get --class HttpClient
+
+# Get AI-powered insights
+uvx pyenvsearch explain fastapi     # Deep technical explanation
+uvx pyenvsearch howto pandas --task "data cleaning"
+uvx pyenvsearch api-guide httpx
+
+# Enhanced object inspection (replaces dir())
+uv run python -c "
+from pyenvsearch import enhanced_dir
+import requests
+enhanced_dir(requests, max_items=10)
+"
+```
+
 ## Package Management
 
 **FOR DEPENDENCIES** (packages your code imports):
@@ -59,11 +94,12 @@ uv sync
 uv add requests pandas fastapi  # ✅ These go in pyproject.toml
 ```
 
-**FOR TOOLS** (linters, formatters, type checkers):
+**FOR TOOLS** (linters, formatters, type checkers, explorers):
 ```bash
-uvx mypy main.py   # ✅ Runs without installing
-uvx ruff check .   # ✅ Ephemeral execution
-uvx pytest         # ✅ No installation needed
+uvx ty check       # ✅ Type checking with ty
+uvx ruff check .   # ✅ Linting with ruff
+uvx pytest         # ✅ Testing
+uvx pyenvsearch    # ✅ Package exploration
 ```
 
 **NEVER DO THIS:**
@@ -144,8 +180,30 @@ Write tests first (TDD):
 
 ## Best Practices
 
-- Type hints for all functions
-- Docstrings for public APIs
-- Follow PEP 8 style guide
-- Use pathlib for file operations
-- Prefer dataclasses/pydantic for data models
+### Code Exploration & Understanding
+
+**ALWAYS use pyenvsearch when working with unfamiliar packages:**
+```bash
+# Before using a new package, explore it first
+uvx pyenvsearch summarize <package>     # Understand what it does
+uvx pyenvsearch toc <package> --depth 2 # See structure
+uvx pyenvsearch docs <package>          # Find documentation
+
+# When debugging or investigating
+uvx pyenvsearch search "error" --package <package>
+uvx pyenvsearch class <ClassName> --package <package>
+uvx pyenvsearch list-methods <package> --include-private
+
+# Get usage examples and tutorials
+uvx pyenvsearch howto <package> --task "specific task"
+uvx pyenvsearch api-guide <package>
+```
+
+### Development Workflow
+
+1. **Explore before coding**: Use pyenvsearch to understand packages
+2. **Type hints for all functions**: Use `ty` to verify
+3. **Docstrings for public APIs**: Clear and concise
+4. **Follow PEP 8 style guide**: Use `ruff` for enforcement
+5. **Use pathlib for file operations**: Modern path handling
+6. **Prefer dataclasses/pydantic for data models**: Type-safe data
