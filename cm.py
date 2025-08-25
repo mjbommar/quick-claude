@@ -102,8 +102,11 @@ project_type: auto
         debug("Starting download_essential_modules()")
         essential_modules = [
             ("context", "base-instructions"),
+            ("context", "production-mindset"),
             ("context", "project-structure"),
-            ("behavior", "flow-state"),
+            ("behavior", "test-driven-development"),
+            ("behavior", "self-improvement"),
+            ("behavior", "proactive-todo-usage"),
             ("task", "todo-management"),
             ("tech", "python-modern"),
         ]
@@ -144,7 +147,7 @@ project_type: auto
 id: base-instructions
 name: Base Instructions
 category: context
-priority: 10
+priority: 50
 active: true
 ---
 
@@ -163,7 +166,7 @@ You are Claude, an AI assistant created by Anthropic.
 id: project-structure
 name: Project Structure
 category: context
-priority: 8
+priority: 30
 active: true
 ---
 
@@ -189,12 +192,102 @@ active: false
 When activated, prioritize uninterrupted progress.
 Make reasonable assumptions and batch operations.
 """
+        elif name == "test-driven-development":
+            content = """---
+id: test-driven-development
+name: Test-Driven Development
+category: behavior
+priority: 95
+active: true
+---
+
+# Test-Driven Development
+
+## Write Tests FIRST
+
+Always write tests before implementation:
+1. Write failing test
+2. Write code to pass
+3. Refactor
+
+Use `uvx pytest` for testing.
+"""
+        elif name == "production-mindset":
+            content = """---
+id: production-mindset
+name: Production Mindset
+category: context
+priority: 100
+active: true
+---
+
+# Production Mindset
+
+This is REAL code for REAL users.
+- Never mock without permission
+- Always validate thoroughly
+- Consider security and performance
+"""
+        elif name == "self-improvement":
+            content = """---
+id: self-improvement
+name: Self-Improvement
+category: behavior
+priority: 40
+active: true
+---
+
+# Self-Improvement
+
+Learn from each task:
+- Document in log.md
+- Recognize patterns
+- Improve approach
+"""
+        elif name == "todo-management":
+            content = """---
+id: todo-management
+name: Todo Management
+category: task
+priority: 90
+active: true
+---
+
+# Task Management with TodoWrite
+
+## 🚨 CRITICAL: Use TodoWrite Tool PROACTIVELY
+
+**You MUST use the TodoWrite tool to track all tasks:**
+- Create todos for multi-step work
+- Mark as `in_progress` when starting
+- Mark as `completed` immediately when done
+- Only one task `in_progress` at a time
+"""
+        elif name == "proactive-todo-usage":
+            content = """---
+id: proactive-todo-usage
+name: Proactive Todo Usage
+category: behavior
+priority: 85
+active: true
+---
+
+# Proactive TodoWrite Usage
+
+## YOU MUST USE TodoWrite TOOL PROACTIVELY
+
+Use TodoWrite for ANY non-trivial task.
+- Task has 3+ steps
+- User provides multiple requests
+- Implementing a feature
+- Fixing multiple bugs
+"""
         elif name == "python-modern":
             content = """---
 id: python-modern
 name: Modern Python Development
 category: tech
-priority: 9
+priority: 80
 active: false
 ---
 

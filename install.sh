@@ -176,11 +176,15 @@ setup_claude_modules() {
                 # Download essential modules manually
                 local modules=(
                     "context/base-instructions.md"
+                    "context/production-mindset.md"
                     "context/project-structure.md"
-                    "tech/python-modern.md"
-                    "tech/node-typescript.md"
+                    "behavior/test-driven-development.md"
+                    "behavior/self-improvement.md"
+                    "behavior/proactive-todo-usage.md"
                     "behavior/flow-state.md"
                     "task/todo-management.md"
+                    "tech/python-modern.md"
+                    "tech/node-typescript.md"
                 )
                 
                 for module in "${modules[@]}"; do
@@ -246,24 +250,29 @@ activate_default_modules() {
     
     # Use uv run python to bypass interceptors
     if [ -f "cm.py" ]; then
-        # Always activate base modules
+        # Always activate critical modules
         uv run python cm.py activate base-instructions 2>/dev/null || true
+        uv run python cm.py activate production-mindset 2>/dev/null || true
+        uv run python cm.py activate test-driven-development 2>/dev/null || true
+        uv run python cm.py activate todo-management 2>/dev/null || true
+        uv run python cm.py activate proactive-todo-usage 2>/dev/null || true
         uv run python cm.py activate project-structure 2>/dev/null || true
+        uv run python cm.py activate self-improvement 2>/dev/null || true
         
         # Activate project-specific modules
         case $project_type in
             python)
                 uv run python cm.py activate python-modern 2>/dev/null || true
-                print_success "Python modules activated"
+                print_success "Python + core modules activated"
                 ;;
             node)
                 uv run python cm.py activate node-typescript 2>/dev/null || true
-                print_success "Node.js modules activated"
+                print_success "Node.js + core modules activated"
                 ;;
             *)
                 # For generic projects, activate Python module since uv is installed
                 uv run python cm.py activate python-modern 2>/dev/null || true
-                print_success "Base modules + Python module activated (uv available)"
+                print_success "Core modules + Python activated"
                 ;;
         esac
         
