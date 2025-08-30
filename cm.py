@@ -102,14 +102,14 @@ project_type: auto
         debug("Starting download_essential_modules()")
         essential_modules = [
             ("context", "base-instructions"),
-            ("context", "claude-md-management"),
-            ("context", "production-mindset"),
+            ("context", "claude-md-management-concise"),
+            ("context", "production-mindset-concise"),
             ("context", "project-structure"),
-            ("behavior", "test-driven-development"),
-            ("behavior", "self-improvement"),
-            ("behavior", "proactive-todo-usage"),
+            ("behavior", "test-driven-development-concise"),
+            ("behavior", "self-improvement-concise"),
+            ("behavior", "proactive-todo-usage-concise"),
             ("task", "todo-management"),
-            ("tech", "python-modern"),
+            ("tech", "python-modern-concise"),
         ]
         
         for category, module_name in essential_modules:
