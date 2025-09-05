@@ -126,84 +126,55 @@ install_pyenvsearch() {
     fi
 }
 
-download_cm_py() {
-    print_step "Downloading Claude Module Manager..."
-    
-    if curl -sSL "$REPO_BASE/cm.py" -o cm.py 2>/dev/null; then
-        chmod +x cm.py
-        print_success "cm.py downloaded"
-    else
-        print_error "Failed to download cm.py"
-        return 1
-    fi
-}
-
-setup_claude_modules() {
+setup_claude_files() {
     print_step "Setting up Claude Module System..."
-    
-    # Create basic directory structure  
+
+    # Create basic directory structure
     mkdir -p {docs,notes,todo}
     mkdir -p .claude/modules/{task,tech,behavior,context,memory}
     mkdir -p .claude/{config,logs}
+
+    # Check if running from a cloned repo
+    SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
     
-    # Initialize using cm.py - use uv run to bypass interceptors
-    if [ -f "cm.py" ]; then
-        # Debug mode check
-        if [ -n "$QUICK_CLAUDE_DEBUG" ]; then
-            echo "  [DEBUG] Running: uv run python cm.py init"
-            echo "  [DEBUG] Current dir: $(pwd)"
-            echo "  [DEBUG] cm.py exists: $(ls -la cm.py 2>&1)"
-        fi
+    if [ -d "$SCRIPT_DIR/modules" ] && [ -f "$SCRIPT_DIR/cm.py" ]; then
+        print_step "Local repository detected. Copying files..."
         
-        # Use uv run python which bypasses interceptors and handles venv
-        if ! uv run python cm.py --help >/dev/null 2>&1; then
-            print_error "cm.py has syntax errors or import issues"
-            if [ -n "$QUICK_CLAUDE_DEBUG" ]; then
-                echo "  [DEBUG] Error output:"
-                uv run python cm.py --help 2>&1 | sed 's/^/    /'
-            fi
-            print_warning "Falling back to manual setup..."
+        # Copy module manager
+        cp "$SCRIPT_DIR/cm.py" .
+        chmod +x cm.py
+        print_success "cm.py copied"
+        
+        # Copy modules
+        cp -r "$SCRIPT_DIR/modules/"* .claude/modules/
+        print_success "Modules copied from local repository"
+        
+        # Initialize and compile
+        if [ -f "cm.py" ]; then
+            uv run python cm.py init --no-download
+            print_success "Module system initialized"
         else
-            # Run init directly to see real-time output
-            uv run python cm.py init || true
-            
-            # Check if CLAUDE.md was created
-            if [ -f "CLAUDE.md" ]; then
-                print_success "Module system initialized with CLAUDE.md"
-            else
-                print_warning "CLAUDE.md not created, performing manual setup..."
-                
-                # Download essential modules manually
-                local modules=(
-                    "context/base-instructions.md"
-                    "context/claude-md-management.md"
-                    "context/production-mindset.md"
-                    "context/project-structure.md"
-                    "behavior/test-driven-development.md"
-                    "behavior/self-improvement.md"
-                    "behavior/proactive-todo-usage.md"
-                    "behavior/flow-state.md"
-                    "task/todo-management.md"
-                    "tech/python-modern.md"
-                    "tech/node-typescript.md"
-                )
-                
-                for module in "${modules[@]}"; do
-                    local module_url="$REPO_BASE/modules/$module"
-                    local module_path=".claude/modules/$module"
-                    
-                    if curl -sSL "$module_url" -o "$module_path" 2>/dev/null; then
-                        echo "  ✓ Downloaded $module"
-                    else
-                        echo "  ⚠ Could not download $module"
-                    fi
-                done
-                
-                print_success "Modules downloaded manually"
-            fi
+            print_error "cm.py not found after copy"
         fi
     else
-        print_error "cm.py not found - cannot initialize modules"
+        print_step "No local repository found. Downloading files..."
+        
+        # Download cm.py
+        if curl -sSL "$REPO_BASE/cm.py" -o cm.py; then
+            chmod +x cm.py
+            print_success "cm.py downloaded"
+        else
+            print_error "Failed to download cm.py"
+            return 1
+        fi
+        
+        # Initialize and download modules
+        if [ -f "cm.py" ]; then
+            uv run python cm.py init
+            print_success "Module system initialized and modules downloaded"
+        else
+            print_error "cm.py not found after download"
+        fi
     fi
 }
 
@@ -252,34 +223,34 @@ activate_default_modules() {
     # Use uv run python to bypass interceptors
     if [ -f "cm.py" ]; then
         # Always activate critical modules
-        uv run python cm.py activate base-instructions 2>/dev/null || true
-        uv run python cm.py activate claude-md-management 2>/dev/null || true
-        uv run python cm.py activate production-mindset 2>/dev/null || true
-        uv run python cm.py activate test-driven-development 2>/dev/null || true
-        uv run python cm.py activate todo-management 2>/dev/null || true
-        uv run python cm.py activate proactive-todo-usage 2>/dev/null || true
-        uv run python cm.py activate project-structure 2>/dev/null || true
-        uv run python cm.py activate self-improvement 2>/dev/null || true
+        uv run python cm.py activate base-instructions || true
+        uv run python cm.py activate claude-md-management || true
+        uv run python cm.py activate production-mindset || true
+        uv run python cm.py activate test-driven-development || true
+        uv run python cm.py activate todo-management || true
+        uv run python cm.py activate proactive-todo-usage || true
+        uv run python cm.py activate project-structure || true
+        uv run python cm.py activate self-improvement || true
         
         # Activate project-specific modules
         case $project_type in
             python)
-                uv run python cm.py activate python-modern 2>/dev/null || true
+                uv run python cm.py activate python-modern || true
                 print_success "Python + core modules activated"
                 ;;
             node)
-                uv run python cm.py activate node-typescript 2>/dev/null || true
+                uv run python cm.py activate node-typescript || true
                 print_success "Node.js + core modules activated"
                 ;;
             *)
                 # For generic projects, activate Python module since uv is installed
-                uv run python cm.py activate python-modern 2>/dev/null || true
+                uv run python cm.py activate python-modern || true
                 print_success "Core modules + Python activated"
                 ;;
         esac
         
         # Compile CLAUDE.md
-        if uv run python cm.py compile 2>/dev/null; then
+        if uv run python cm.py compile; then
             print_success "CLAUDE.md compiled"
         else
             print_warning "Could not compile CLAUDE.md (run 'uv run python cm.py compile' manually)"
@@ -362,10 +333,9 @@ main() {
     install_uv
     install_claude_interceptors
     install_pyenvsearch
-    download_cm_py
+    setup_claude_files
     
     # Initialize and activate modules (uv run bypasses interceptors)
-    setup_claude_modules
     create_project_files "$PROJECT_TYPE"
     activate_default_modules "$PROJECT_TYPE"
     
