@@ -30,7 +30,7 @@ triggers:
 | Explore package | `dir(package)` or browsing GitHub | `uvx pyenvsearch toc package` | pyenvsearch gives structured view |
 | Find class/method | Manual search or grep | `uvx pyenvsearch class ClassName` | Semantic search is faster |
 | Understand package | Read docs only | `uvx pyenvsearch summarize package` | AI-powered insights |
-| Install library | `pip install requests` | `uv add requests` | It's a dependency |
+| Install library | `pip install httpx` | `uv add httpx` | It's a dependency |
 | Install dev tool | `uv add --group dev ruff` | `uvx ruff` | It's a tool |
 | Type check | `uvx mypy` or `uvx pyright` | `uvx ty check` | Use ty, not mypy! |
 | Format code | `uvx black .` | `uvx ruff format .` | Use ruff, not black! |
@@ -66,7 +66,7 @@ uv sync
 # Quick exploration of any package
 uvx pyenvsearch find httpx          # Find where package is installed
 uvx pyenvsearch toc fastapi         # Generate table of contents
-uvx pyenvsearch summarize requests  # Get AI-powered overview
+uvx pyenvsearch summarize httpx  # Get AI-powered overview
 uvx pyenvsearch list-classes pandas # List all classes in package
 
 # Search for specific functionality
@@ -82,8 +82,8 @@ uvx pyenvsearch api-guide httpx
 # Enhanced object inspection (replaces dir())
 uv run python -c "
 from pyenvsearch import enhanced_dir
-import requests
-enhanced_dir(requests, max_items=10)
+import httpx
+enhanced_dir(httpx, max_items=10)
 "
 ```
 
@@ -91,7 +91,7 @@ enhanced_dir(requests, max_items=10)
 
 **FOR DEPENDENCIES** (packages your code imports):
 ```bash
-uv add requests pandas fastapi  # ✅ These go in pyproject.toml
+uv add httpx polars fastapi  # ✅ These go in pyproject.toml
 ```
 
 **FOR TOOLS** (linters, formatters, type checkers, explorers):

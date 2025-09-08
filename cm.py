@@ -5,22 +5,22 @@ Can be run with just Python 3.11+ standard library for bootstrap,
 then enhances itself with better tools when available.
 """
 
-import json
 import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional, Set, Any
+from typing import Dict, List, Optional
 
 # Debug mode
-DEBUG = os.environ.get('QUICK_CLAUDE_DEBUG', '').lower() in ('1', 'true', 'yes')
+DEBUG = os.environ.get("QUICK_CLAUDE_DEBUG", "").lower() in ("1", "true", "yes")
+
 
 def debug(msg: str):
     """Print debug message if DEBUG is enabled"""
     if DEBUG:
         print(f"[DEBUG] {msg}", file=sys.stderr)
+
 
 # Constants
 VERSION = "1.1.0"
@@ -29,15 +29,16 @@ CLAUDE_MD = Path("CLAUDE.md")
 CONFIG_FILE = Path(".claude/config.yaml")
 MODULES_REPO = "https://raw.githubusercontent.com/mjbommar/quick-claude/master/modules"
 
+
 class SimpleModuleManager:
     """Minimal module manager that works with stdlib only"""
-    
+
     def __init__(self):
         debug("SimpleModuleManager.__init__() called")
         self.modules = {}
         self.config = self.load_config()
         debug(f"Config loaded: {self.config}")
-    
+
     def load_config(self) -> dict:
         """Load or create default config"""
         if CONFIG_FILE.exists():
@@ -45,35 +46,31 @@ class SimpleModuleManager:
             config = {}
             with open(CONFIG_FILE) as f:
                 for line in f:
-                    if ':' in line and not line.strip().startswith('#'):
-                        key, val = line.split(':', 1)
+                    if ":" in line and not line.strip().startswith("#"):
+                        key, val = line.split(":", 1)
                         config[key.strip()] = val.strip()
             return config
-        return {
-            "auto_compile": "true",
-            "max_size": "5000",
-            "project_type": "auto"
-        }
-    
+        return {"auto_compile": "true", "max_size": "5000", "project_type": "auto"}
+
     def init(self, auto_compile=True, download=True):
         """Initialize Claude module system"""
         debug("Starting init()")
         print("🚀 Initializing Claude Module System...")
-        
+
         # Create directory structure
         dirs = [
             ".claude/modules/task",
-            ".claude/modules/tech", 
+            ".claude/modules/tech",
             ".claude/modules/behavior",
             ".claude/modules/context",
             ".claude/modules/memory",
         ]
-        
+
         debug(f"Creating {len(dirs)} directories")
         for dir_path in dirs:
             Path(dir_path).mkdir(parents=True, exist_ok=True)
             debug(f"Created {dir_path}")
-        
+
         # Create default config
         if not CONFIG_FILE.exists():
             CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -82,13 +79,13 @@ auto_compile: true
 max_size: 5000
 project_type: auto
 """)
-        
+
         # Download essential modules
         if download:
             self.download_essential_modules()
-        
+
         print("✅ Claude module system initialized!")
-        
+
         # Auto-compile if requested
         if auto_compile:
             print("\n📦 Compiling initial CLAUDE.md...")
@@ -98,7 +95,7 @@ project_type: auto
             print("  1. Run 'python cm.py compile' to generate CLAUDE.md")
             print("  2. Run 'python cm.py list' to see available modules")
             print("  3. Add custom modules to .claude/modules/")
-    
+
     def download_essential_modules(self):
         """Download essential modules from repository"""
         debug("Starting download_essential_modules()")
@@ -115,7 +112,7 @@ project_type: auto
             ("tech", "python-modern"),
             ("tech", "node-typescript"),
         ]
-        
+
         for category, module_name in essential_modules:
             module_path = MODULE_DIR / category / f"{module_name}.md"
             debug(f"Checking {module_path}")
@@ -124,17 +121,24 @@ project_type: auto
                 try:
                     import urllib.request
                     import urllib.error
+
                     url = f"{MODULES_REPO}/{category}/{module_name}.md"
                     debug(f"Downloading from {url}")
                     response = urllib.request.urlopen(url, timeout=3)
-                    content = response.read().decode('utf-8')
+                    content = response.read().decode("utf-8")
                     module_path.parent.mkdir(parents=True, exist_ok=True)
                     module_path.write_text(content)
                     print(f"  ✓ Downloaded {category}/{module_name}")
-                except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
+                except (
+                    urllib.error.URLError,
+                    urllib.error.HTTPError,
+                    TimeoutError,
+                ) as e:
                     # Fallback to creating default module
                     debug(f"Download failed for {category}/{module_name}: {e}")
-                    print(f"  ⚠ Could not download {category}/{module_name} (using default)")
+                    print(
+                        f"  ⚠ Could not download {category}/{module_name} (using default)"
+                    )
                     self.create_default_module(module_path, module_name, category)
                 except Exception as e:
                     debug(f"Unexpected error for {category}/{module_name}: {e}")
@@ -142,11 +146,11 @@ project_type: auto
                     self.create_default_module(module_path, module_name, category)
             else:
                 debug(f"Module already exists: {module_path}")
-    
+
     def create_default_module(self, path: Path, name: str, category: str):
         """Create a default module file"""
         path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         if name == "base-instructions":
             content = """---
 id: base-instructions
@@ -334,24 +338,24 @@ active: false
         else:
             content = f"""---
 id: {name}
-name: {name.replace('-', ' ').title()}
+name: {name.replace("-", " ").title()}
 category: {category}
 priority: 5
 active: false
 ---
 
-# {name.replace('-', ' ').title()}
+# {name.replace("-", " ").title()}
 
 Module content here.
 """
-        
+
         path.write_text(content)
         print(f"  ✓ Created {category}/{name}")
-    
+
     def compile(self, output_file: str = "CLAUDE.md"):
         """Compile modules into the specified output file."""
         print(f"📦 Compiling {output_file}...")
-        
+
         # Load all active modules
         all_modules = []
         if MODULE_DIR.exists():
@@ -360,24 +364,26 @@ Module content here.
                 if content.strip():
                     metadata = self.parse_frontmatter(content)
                     if metadata.get("active", True):
-                        all_modules.append({
-                            "path": module_file,
-                            "content": content,
-                            "metadata": metadata,
-                            "priority": int(metadata.get("priority", 5))
-                        })
-        
+                        all_modules.append(
+                            {
+                                "path": module_file,
+                                "content": content,
+                                "metadata": metadata,
+                                "priority": int(metadata.get("priority", 5)),
+                            }
+                        )
+
         all_modules.sort(key=lambda x: x["priority"], reverse=True)
-        
+
         output_content = ""
         filename_upper = output_file.upper()
         if "GEMINI.MD" in filename_upper:
             output_content = self.generate_gemini_md(all_modules)
         elif "AGENTS.MD" in filename_upper:
             output_content = self.generate_agents_md(all_modules)
-        else: # Default to CLAUDE.md
+        else:  # Default to CLAUDE.md
             output_content = self.generate_claude_md(all_modules)
-            
+
         Path(output_file).write_text(output_content)
         print(f"✅ Compiled {len(all_modules)} modules into {output_file}")
 
@@ -391,7 +397,7 @@ Module content here.
             "**This file is auto-generated**. To update, edit modules in `.claude/modules/` and run `python cm.py compile`.",
             "",
             "---",
-            ""
+            "",
         ]
 
         # Table of Contents
@@ -402,12 +408,14 @@ Module content here.
             if category not in modules_by_category:
                 modules_by_category[category] = []
             modules_by_category[category].append(module)
-        
+
         for category, modules in sorted(modules_by_category.items()):
             output.append(f"- **{category.upper()}**")
             for module in sorted(modules, key=lambda x: x["metadata"].get("name", "")):
                 module_name = module["metadata"].get("name", module["path"].stem)
-                output.append(f"  - [{module_name}](#{module['metadata'].get('id', '')})")
+                output.append(
+                    f"  - [{module_name}](#{module['metadata'].get('id', '')})"
+                )
         output.append("\n---\n")
 
         # Add modules
@@ -417,16 +425,23 @@ Module content here.
                 parts = content.split("---", 2)
                 if len(parts) >= 3:
                     content = parts[2].strip()
-            
+
             module_name = module["metadata"].get("name", module["path"].stem)
-            module_id = module["metadata"].get("id", module_name.lower().replace(' ', '-'))
-            
-            output.append(f"## <a id=\"{module_id}\"></a>📦 {module_name}")
-            output.append(f"> `{module['path'].relative_to(Path.cwd())}`")
+            module_id = module["metadata"].get(
+                "id", module_name.lower().replace(" ", "-")
+            )
+
+            output.append(f'## <a id="{module_id}"></a>📦 {module_name}')
+            try:
+                relative_path = module["path"].relative_to(Path.cwd())
+            except ValueError:
+                # If path is already relative or can't be made relative, use as is
+                relative_path = module["path"]
+            output.append(f"> `{relative_path}`")
             output.append("")
             output.append(content)
             output.append("\n---\n")
-        
+
         return "\n".join(output)
 
     def generate_gemini_md(self, all_modules: List[Dict]) -> str:
@@ -438,13 +453,15 @@ Module content here.
             "This document provides instructions for the Gemini agent working on this project.",
             "---",
             "## Core Directives & Rules",
-            ""
+            "",
         ]
         # Re-use agents.md logic for the body
         output.append(self.generate_agents_md(all_modules, is_child=True))
         return "\n".join(output)
 
-    def generate_agents_md(self, all_modules: List[Dict], is_child: bool = False) -> str:
+    def generate_agents_md(
+        self, all_modules: List[Dict], is_child: bool = False
+    ) -> str:
         """Generates content for AGENTS.md"""
         header = [
             "# AGENTS.md - Instructions for AI Agents",
@@ -458,7 +475,7 @@ Module content here.
             header = []
 
         output = list(header)
-        
+
         # Table of Contents
         output.append("## Table of Contents")
         modules_by_category = {}
@@ -467,12 +484,14 @@ Module content here.
             if category not in modules_by_category:
                 modules_by_category[category] = []
             modules_by_category[category].append(module)
-        
+
         for category, modules in sorted(modules_by_category.items()):
             output.append(f"- **{category.upper()}**")
             for module in sorted(modules, key=lambda x: x["metadata"].get("name", "")):
                 module_name = module["metadata"].get("name", module["path"].stem)
-                module_id = module["metadata"].get("id", module_name.lower().replace(' ', '-'))
+                module_id = module["metadata"].get(
+                    "id", module_name.lower().replace(" ", "-")
+                )
                 output.append(f"  - [{module_name}](#{module_id})")
         output.append("\n---\n")
 
@@ -483,99 +502,20 @@ Module content here.
                 parts = content.split("---", 2)
                 if len(parts) >= 3:
                     content = parts[2].strip()
-            
+
             module_name = module["metadata"].get("name", module["path"].stem)
-            module_id = module["metadata"].get("id", module_name.lower().replace(' ', '-'))
-            
-            output.append(f"<a id=\"{module_id}\"></a>")
+            module_id = module["metadata"].get(
+                "id", module_name.lower().replace(" ", "-")
+            )
+
+            output.append(f'<a id="{module_id}"></a>')
             output.append(f"## {module_name}")
             output.append("")
             output.append(content)
             output.append("\n---\n")
-        
+
         return "\n".join(output)
 
-    def generate_claude_md(self, all_modules: List[Dict]) -> str:
-        """Generates content for CLAUDE.md"""
-        output = [
-            "# CLAUDE.md - Project Context",
-            f"Generated: {datetime.now().isoformat()}",
-            f"Active Modules: {len(all_modules)}",
-            "",
-            "**This file is auto-generated**. To update, edit modules in `.claude/modules/` and run `python cm.py compile`.",
-            "",
-            "---",
-            ""
-        ]
-        # ... (rest of the generation logic)
-        return "\n".join(output)
-
-    def generate_gemini_md(self, all_modules: List[Dict]) -> str:
-        """Generates content for GEMINI.md"""
-        output = [
-            "# GEMINI.md - Project Directives",
-            "## Core Mission: [Please define project goal]",
-            "",
-            "This document provides instructions for the Gemini agent working on this project.",
-            "---",
-            "## Core Directives & Rules",
-            ""
-        ]
-        # Re-use agents.md logic for the body
-        output.append(self.generate_agents_md(all_modules, is_child=True))
-        return "\n".join(output)
-
-    def generate_agents_md(self, all_modules: List[Dict], is_child: bool = False) -> str:
-        """Generates content for AGENTS.md"""
-        header = [
-            "# AGENTS.md - Instructions for AI Agents",
-            f"Generated: {datetime.now().isoformat()}",
-            "",
-            "This document provides instructions for AI agents working on this project.",
-            "",
-            "---",
-        ]
-        if is_child:
-            header = []
-
-        output = list(header)
-        
-        # Table of Contents
-        output.append("## Table of Contents")
-        modules_by_category = {}
-        for module in all_modules:
-            category = module["metadata"].get("category", "uncategorized")
-            if category not in modules_by_category:
-                modules_by_category[category] = []
-            modules_by_category[category].append(module)
-        
-        for category, modules in sorted(modules_by_category.items()):
-            output.append(f"- **{category.upper()}**")
-            for module in sorted(modules, key=lambda x: x["metadata"].get("name", "")):
-                module_name = module["metadata"].get("name", module["path"].stem)
-                module_id = module["metadata"].get("id", module_name.lower().replace(' ', '-'))
-                output.append(f"  - [{module_name}](#{module_id})")
-        output.append("\n---\n")
-
-        # Add modules
-        for module in all_modules:
-            content = module["content"]
-            if content.startswith("---"):
-                parts = content.split("---", 2)
-                if len(parts) >= 3:
-                    content = parts[2].strip()
-            
-            module_name = module["metadata"].get("name", module["path"].stem)
-            module_id = module["metadata"].get("id", module_name.lower().replace(' ', '-'))
-            
-            output.append(f"<a id=\"{module_id}\"></a>")
-            output.append(f"## {module_name}")
-            output.append("")
-            output.append(content)
-            output.append("\n---\n")
-        
-        return "\n".join(output)
-    
     def parse_frontmatter(self, content: str) -> dict:
         """Simple frontmatter parser"""
         metadata = {}
@@ -595,7 +535,7 @@ Module content here.
                         val = False
                     metadata[key] = val
         return metadata
-    
+
     def detect_project_type(self) -> Optional[str]:
         """Detect project type from files"""
         if Path("package.json").exists():
@@ -607,69 +547,76 @@ Module content here.
         elif Path("go.mod").exists():
             return "go"
         return None
-    
+
     def list_modules(self):
         """List available modules"""
         print("\n📚 Available Modules:\n")
-        
+
         if not MODULE_DIR.exists():
             print("No modules found. Run 'python cm.py init' first.")
             return
-        
+
         modules_by_category = {}
         for module_file in MODULE_DIR.rglob("*.md"):
             category = module_file.parent.name
             if category not in modules_by_category:
                 modules_by_category[category] = []
-            
+
             content = module_file.read_text()
             metadata = self.parse_frontmatter(content)
-            modules_by_category[category].append({
-                "name": module_file.stem,
-                "active": metadata.get("active", False),
-                "priority": metadata.get("priority", 5)
-            })
-        
+            modules_by_category[category].append(
+                {
+                    "name": module_file.stem,
+                    "active": metadata.get("active", False),
+                    "priority": metadata.get("priority", 5),
+                }
+            )
+
         for category, modules in sorted(modules_by_category.items()):
             print(f"  {category.upper()}:")
             for module in sorted(modules, key=lambda x: x["name"]):
                 status = "✓" if module["active"] else "○"
                 print(f"    {status} {module['name']} (priority: {module['priority']})")
-        
+
         print("\n  ✓ = active, ○ = inactive")
         print("\nTo activate: python cm.py activate <module-name>")
         print("To compile: python cm.py compile")
-    
+
     def activate(self, module_name: str):
         """Activate a module"""
         found = False
         for module_file in MODULE_DIR.rglob(f"*{module_name}*.md"):
             content = module_file.read_text()
             # Update active status
-            content = re.sub(r'^active:\s*\w+', 'active: true', content, flags=re.MULTILINE)
+            content = re.sub(
+                r"^active:\s*\w+", "active: true", content, flags=re.MULTILINE
+            )
             module_file.write_text(content)
             print(f"✓ Activated {module_file.stem}")
             found = True
-        
+
         if not found:
             print(f"Module '{module_name}' not found")
         else:
             print("\nRun 'python cm.py compile' to update CLAUDE.md")
-    
+
     def deactivate(self, module_name: str):
         """Deactivate a module"""
         found = False
         for module_file in MODULE_DIR.rglob(f"*{module_name}*.md"):
             content = module_file.read_text()
-            content = re.sub(r'^active:\s*\w+', 'active: false', content, flags=re.MULTILINE)
+            content = re.sub(
+                r"^active:\s*\w+", "active: false", content, flags=re.MULTILINE
+            )
             module_file.write_text(content)
             print(f"○ Deactivated {module_file.stem}")
             found = True
-        
+
         if not found:
             print(f"Module '{module_name}' not found")
         else:
             print("\nRun 'python cm.py compile' to update CLAUDE.md")
+
 
 def main():
     """Main entry point with simple CLI"""
@@ -680,11 +627,11 @@ def main():
         debug(f"Failed to create SimpleModuleManager: {e}")
         print(f"Error initializing module manager: {e}", file=sys.stderr)
         sys.exit(1)
-    
+
     # Simple argument parsing
     args = sys.argv[1:]
     debug(f"Parsed args: {args}")
-    
+
     if not args or args[0] in ("-h", "--help", "help"):
         print(f"""
 Claude Module Manager (cm.py) - v{VERSION}
@@ -721,14 +668,18 @@ Usage:
         print(f"Unknown command: {args[0]}")
         print("Run 'python cm.py help' for usage")
 
+
 if __name__ == "__main__":
     debug("Script started")
     # Try to use the enhanced version if available
     try:
         import click
         import rich
+
         # If we get here, use the full version from reference
-        print("Note: Full version with rich UI available. Using simple version for bootstrap.")
+        print(
+            "Note: Full version with rich UI available. Using simple version for bootstrap."
+        )
         print("To use full version: uv run cm.py <command>")
         main()
     except ImportError:
@@ -739,6 +690,7 @@ if __name__ == "__main__":
         debug(f"Fatal error: {e}")
         print(f"Fatal error: {e}", file=sys.stderr)
         import traceback
+
         if DEBUG:
             traceback.print_exc()
         sys.exit(1)

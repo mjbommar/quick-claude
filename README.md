@@ -44,8 +44,8 @@ python cm.py activate flow-state  # Activate specific behaviors
 Automatically suggests modern alternatives when you use outdated commands:
 
 ```bash
-$ pip install requests
-> 💡 Consider using: uv add requests
+$ pip install httpx
+> 💡 Consider using: uv add httpx
 > (10-100x faster, with better dependency resolution)
 > Run with --force to use pip anyway
 ```
@@ -55,9 +55,9 @@ $ pip install requests
 Explore and understand Python packages in your environment:
 
 ```bash
-uvx pyenvsearch inspect requests           # Explore a package
-uvx pyenvsearch search "http client"       # Find packages
-uvx pyenvsearch explain requests.Session   # Get AI explanations
+uvx pyenvsearch toc httpx           # Explore a package
+uvx pyenvsearch search "SOCKS"       # Find packages
+uvx pyenvsearch explain httpx.Client   # Get AI explanations
 ```
 
 ### 4. **Project Structure**
@@ -152,7 +152,6 @@ python cm.py compile
 
 ```bash
 # Understand what's in your environment
-uvx pyenvsearch inspect fastapi
 uvx pyenvsearch toc fastapi
 uvx pyenvsearch explain "fastapi.FastAPI"
 ```
